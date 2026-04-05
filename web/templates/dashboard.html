@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Dashboard - AI Stock Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 0;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border-left-color: white;
+        }
+        
+        .sidebar .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+        }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .stat-card .label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .positive { color: var(--success-color); }
+        .negative { color: var(--danger-color); }
+        
+        .table-card {
+            background: white;
+            border-radius: 10px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .signal-buy { background-color: rgba(40, 167, 69, 0.1); border-left: 4px solid var(--success-color); }
+        .signal-sell { background-color: rgba(220, 53, 69, 0.1); border-left: 4px solid var(--danger-color); }
+        .signal-hold { background-color: rgba(255, 193, 7, 0.1); border-left: 4px solid var(--warning-color); }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center p-3">
+                        <h4><i class="fas fa-brain"></i> AI Trader</h4>
+                        <small class="text-light">Intelligent Investing</small>
+                    </div>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#portfolio">
+                                <i class="fas fa-chart-line"></i>
+                                Portfolio
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#stocks">
+                                <i class="fas fa-search-dollar"></i>
+                                Stock Analysis
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#predictions">
+                                <i class="fas fa-robot"></i>
+                                AI Predictions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#backtesting">
+                                <i class="fas fa-history"></i>
+                                Backtesting
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#alerts">
+                                <i class="fas fa-bell"></i>
+                                Alerts
+                            </a>
+                        </li>
+                        <li class="nav-item mt-4">
+                            <a class="nav-link" href="#settings">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
+                <!-- Header -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Trading Dashboard</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="refresh-btn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                        <div id="live-indicator" class="badge bg-success">
+                            <i class="fas fa-circle"></i> LIVE
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market Overview -->
+                <div class="row mb-4">
+                    <div class="col-xl-2 col-md-4">
+                        <div class="stat-card">
+                            <div class="label">Portfolio Value</div>
+                            <div class="value" id="portfolio-value">$---</div>
+                            <small id="portfolio-change" class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4">
+                        <div class="stat-card">
+                            <div class="label">Today's P&L</div>
+                            <div class="value" id="daily-pnl">$---</div>
+                            <small id="daily-pnl-percent" class="text-muted">--%</small>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4">
+                        <div class="stat-card">
+                            <div class="label">Active Positions</div>
+                            <div class="value" id="active-positions">--</div>
+                            <small class="text-muted">Open trades</small>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4">
+                        <div class="stat-card">
+                            <div class="label">Win Rate</div>
+                            <div class="value" id="win-rate">--%</div>
+                            <small class="text-muted">Successful trades</small>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4">
+                        <div class="stat-card">
+                            <div class="label">AI Confidence</div>
+                            <div class="value" id="ai-confidence">--%</div>
+                            <small class="text-muted">Prediction accuracy</small>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4">
+                        <div class="stat-card">
+                            <div class="label">Market Sentiment</div>
+                            <div class="value" id="market-sentiment">--</div>
+                            <small id="sentiment-trend" class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="chart-container">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Portfolio Performance</h5>
+                                <select class="form-select form-select-sm" style="width: auto;">
+                                    <option>1 Week</option>
+                                    <option>1 Month</option>
+                                    <option selected>3 Months</option>
+                                    <option>1 Year</option>
+                                </select>
+                            </div>
+                            <div id="portfolio-chart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="chart-container">
+                            <h5 class="mb-3">Asset Allocation</h5>
+                            <div id="allocation-chart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Signals & Stock Analysis -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>AI Trading Signals</h5>
+                                <select id="signal-stock-selector" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="AAPL">AAPL</option>
+                                    <option value="GOOGL">GOOGL</option>
+                                    <option value="MSFT">MSFT</option>
+                                    <option value="TSLA">TSLA</option>
+                                    <option value="AMZN">AMZN</option>
+                                </select>
+                            </div>
+                            <div id="trading-signals-container">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2">Loading AI signals...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="table-card">
+                            <div class="p-3 border-bottom">
+                                <h5 class="mb-0">Top Stock Predictions</h5>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Symbol</th>
+                                            <th>Current</th>
+                                            <th>Predicted</th>
+                                            <th>Signal</th>
+                                            <th>Confidence</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="predictions-table">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4">
+                                                <div class="spinner-border spinner-border-sm" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                Loading predictions...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="table-card">
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Recent Trading Activity</h5>
+                                <button class="btn btn-sm btn-outline-primary" id="export-trades">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Symbol</th>
+                                            <th>Action</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>P&L</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-trades">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                Loading trade history...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
